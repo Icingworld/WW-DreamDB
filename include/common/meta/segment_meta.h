@@ -32,8 +32,8 @@ public:
     std::string path;               // 段落路径 示例: [collection_name]/segments/[prefix]/segment_[UUIDv4]/
     int dimension;                  // 段落维度
     bool sealed;                    // 段落是否封闭
-    MetricType metric;              // 距离指标类型
-    IndexType index;                // 索引类型
+    Types::MetricType metric;       // 距离指标类型
+    Types::IndexType index;         // 索引类型
     std::size_t size;               // 段落大小
 };
     

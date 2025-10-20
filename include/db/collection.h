@@ -7,6 +7,7 @@
 
 #include "db/segment.h"
 #include "common/meta/collection_meta.h"
+#include "cache/lru_cache.h"
 
 namespace WW
 {
@@ -22,17 +23,11 @@ public:
     ~Collection() = default;
 
     /**
-     * @brief 更新或插入向量
+     * @brief 插入向量
      * @param id 向量 ID
      * @param vector 向量数据
      */
-    bool Upsert(const std::string & id, const std::vector<float> & vector);
-
-    /**
-     * @brief 删除向量
-     * @param id 向量 ID
-     */
-    bool Delete(const std::string & id);
+    bool Insert(const std::string & id, const std::vector<float> & vector);
 
     /**
      * @brief 搜索向量
@@ -53,8 +48,10 @@ public:
     void Load();
 
 private:
-    Meta::CollectionMeta meta_;                               // 集合元数据
-    std::vector<std::shared_ptr<Segment>> segments_;    // 段落对象
+    Meta::CollectionMeta meta_;                                                         // 集合元数据
+    std::shared_ptr<Segment> active_segment_;                                           // 当前活跃的 segment
+    std::vector<std::shared_ptr<Meta::SegmentMeta>> segments_;                          // 所有段落的元数据
+    std::shared_ptr<LRUCache<std::string, std::shared_ptr<Segment>>> segment_cache_;    // 段落缓存
 };
 
 } // namespace WW
