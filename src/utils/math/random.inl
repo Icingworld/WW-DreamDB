@@ -3,7 +3,7 @@ namespace WW::Math
 
 template <typename RandomEngine>
 template <typename... Args>
-RandomGenerator<RandomEngine>::RandomGenerator(Args&&... args)
+RandomGenerator<RandomEngine>::RandomGenerator(Args &&... args)
     : engine_(std::forward<Args>(args)...)
 {
 }
