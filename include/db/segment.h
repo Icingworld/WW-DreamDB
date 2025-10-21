@@ -39,6 +39,8 @@ public:
      */
     std::vector<Types::SearchResult> Search(const std::vector<float> & vector, int top_k) const;
 
+    std::string Name() const;
+
     /**
      * @brief 获取向量数量
      * @return 向量数量
@@ -46,28 +48,28 @@ public:
     std::size_t Size() const;
 
     /**
-     * @brief 保存段落到磁盘
+     * @brief 保存 segment 到磁盘
      */
     void Seal();
 
     /**
-     * @brief 加载段落元数据
+     * @brief 加载 segment 元数据
      */
     void LoadMeta();
 
     /**
-     * @brief 加载段落索引
+     * @brief 加载 segment 索引
      */
     void LoadIndex();
 
     /**
-     * @brief 加载段落数据
+     * @brief 加载 segment 数据
      */
     void LoadData();
 
 private:
-    Meta::SegmentMeta meta_;                      // 段落元数据
-    std::vector<IndexEntry> data_;          // 段落数据
+    Meta::SegmentMeta meta_;                // segment 元数据
+    std::vector<IndexEntry> data_;          // segment 数据
     std::unique_ptr<IndexBase> index_;      // 索引
 };
 

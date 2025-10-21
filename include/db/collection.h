@@ -38,20 +38,39 @@ public:
     std::vector<Types::SearchResult> Search(const std::vector<float> & vector, int top_k) const;
 
     /**
-     * @brief 保存集合到磁盘
+     * @brief 强制保存活跃 segment 到磁盘
      */
-    void Flush() const;
+    void SealActiveSegment();
 
     /**
-     * @brief 从磁盘加载集合
+     * @brief 强制保存所有 segment 到磁盘
+     */
+    void Flush();
+
+    /**
+     * @brief 从磁盘加载 collection
      */
     void Load();
 
+    /**
+     * @brief 保存 collection 元数据到磁盘
+     */
+    void SaveMeta();
+
+    /**
+     * @brief 创建新的 collection
+     */
+    void New();
+
 private:
-    Meta::CollectionMeta meta_;                                                         // 集合元数据
+    Meta::CollectionMeta meta_;                                                         // collection 元数据
     std::shared_ptr<Segment> active_segment_;                                           // 当前活跃的 segment
-    std::vector<std::shared_ptr<Meta::SegmentMeta>> segments_;                          // 所有段落的元数据
-    std::shared_ptr<LRUCache<std::string, std::shared_ptr<Segment>>> segment_cache_;    // 段落缓存
+    std::shared_ptr<LRUCache<std::string, std::shared_ptr<Segment>>> segment_cache_;    // segment 缓存
+
+    /**
+     * @brief 创建新的 segment
+     */
+    std::shared_ptr<Segment> CreateNewSegment() const;
 };
 
 } // namespace WW

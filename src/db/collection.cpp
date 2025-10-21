@@ -3,28 +3,37 @@
 #include <filesystem>
 #include <algorithm>
 
+#include "common/prefix.h"
+#include "uuid/uuid.h"
+
 namespace WW
 {
+
+/**
+ * @brief 无分隔 UUID 实例
+ */
+static UUID::NoSeperatorUUID ns_uuid;
 
 Collection::Collection(const Meta::CollectionMeta & meta)
     : meta_(meta)
     , active_segment_(nullptr)
-    , segments_()
     , segment_cache_()
 {
-    // 创建 collection 根目录
-    std::filesystem::create_directories(meta_.root_path + "/" + meta_.name);
+    // 加载 collection 元数据
 }
 
 bool Collection::Insert(const std::string & id, const std::vector<float> & vector)
 {
-    // if (segments_.empty() || segments_.back()->Size() >= meta_.segment_size) {
-    //     std::string seg_path = meta_.root_path + "/" + meta_.name + "/segment_" + std::to_string(segments_.size()) + ".seg";
-    //     Meta::SegmentMeta meta = {seg_path, meta_.dimension};
-    //     segments_.push_back(std::make_shared<Segment>(meta));
-    // }
+    if (active_segment_->Size() >= meta_.segment_size) {
+        // 超过阈值，封闭原激活 segment
+        active_segment_->Seal();
+        // 创建新的 segment
+        active_segment_ = CreateNewSegment();
+        // 将新 segment 加入元数据中 segment 列表
+        meta_.segment_name.emplace_back(active_segment_->Name());
+    }
 
-    // return segments_.back()->Insert(id, vector);
+    return active_segment_->Insert(id, vector);
 }
 
 std::vector<Types::SearchResult> Collection::Search(const std::vector<float> & vector, int top_k) const
@@ -33,7 +42,7 @@ std::vector<Types::SearchResult> Collection::Search(const std::vector<float> & v
     // std::vector<Types::SearchResult> all_results;
     // all_results.reserve(top_k * segments_.size());
 
-    // // 从每个段落获取结果
+    // // 从每个 segment 获取结果
     // for (const auto & seg : segments_) {
     //     auto results = seg->Search(vector, top_k);
     //     all_results.insert(all_results.end(), results.begin(), results.end());
@@ -49,26 +58,64 @@ std::vector<Types::SearchResult> Collection::Search(const std::vector<float> & v
     // return std::vector<Types::SearchResult>(all_results.begin(), all_results.begin() + top_k);
 }
 
-void Collection::Flush() const
+void Collection::SealActiveSegment()
 {
-    // for (const auto & seg : segments_) {
-    //     seg->Seal();
-    // }
+    active_segment_->Seal();
 }
 
+void Collection::Flush()
+{
+    SealActiveSegment();
+    SaveMeta();
+}
 
 void Collection::Load()
 {
-    // std::filesystem::path dir = meta_.root_path + "/" + meta_.name;
-    // if (!std::filesystem::exists(dir)) return;
-    // for (auto& entry : std::filesystem::directory_iterator(dir)) {
-    //     if (entry.path().extension() == ".seg") {
-    //         Meta::SegmentMeta meta = {entry.path().string(), meta_.dimension};
-    //         auto seg = std::make_shared<Segment>(meta);
-    //         seg->Load();
-    //         segments_.push_back(seg);
-    //     }
-    // }
+    // 加载 collection 元数据
+    Meta::LoadMeta(meta_, meta_.root_path + "/" + meta_.name + "/meta.json");
+
+    // 加载所有 segment 元数据
+    Meta::SegmentMeta segment_meta;
+    
+}
+
+void Collection::SaveMeta()
+{
+    Meta::SaveMeta(meta_, meta_.root_path + "/" + meta_.name + "/meta.json");
+}
+
+void Collection::New()
+{
+    // 创建 collection 根目录
+    std::filesystem::create_directories(meta_.root_path + "/" + meta_.name);
+
+    // 创建 segments 目录
+    std::filesystem::create_directories(meta_.root_path + "/" + meta_.name + "/segments");
+
+    // 创建 segments 二级目录
+    for (const auto & prefix : segments_prefixes) {
+        std::filesystem::create_directories(meta_.root_path + "/" + meta_.name + "/segments/" + prefix);
+    }
+}
+
+std::shared_ptr<Segment> Collection::CreateNewSegment() const
+{
+    // 随机 segment 名
+    ns_uuid.generate();
+    std::string segment_name = ns_uuid.toString();
+    std::string segment_prefix = segment_name.substr(0, 2);
+
+    // 创建 segment 元数据
+    Meta::SegmentMeta meta;
+    meta.root_path = meta_.root_path + "/" + meta_.name + "/segments/" + segment_prefix;
+    meta.name = segment_name;
+    meta.dimension = meta_.dimension;
+    meta.sealed = false;
+    meta.metric = meta_.metric;
+    meta.index = meta_.index;
+    meta.size = 0;
+
+    return std::make_shared<Segment>(meta);
 }
 
 } // namespace WW

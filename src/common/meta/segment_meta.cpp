@@ -4,7 +4,8 @@ namespace WW::Meta
 {
 
 SegmentMeta::SegmentMeta()
-    : path()
+    : root_path()
+    , name()
     , dimension(0)
     , sealed(false)
     , metric(Types::MetricType::L2)
@@ -16,7 +17,8 @@ SegmentMeta::SegmentMeta()
 Json SegmentMeta::ToJson() const
 {
     Json json;
-    json["path"] = path;
+    json["root_path"] = root_path;
+    json["name"] = name;
     json["dimension"] = dimension;
     json["sealed"] = sealed;
     json["metric"] = Types::MetricTypeToString(metric);
@@ -27,7 +29,8 @@ Json SegmentMeta::ToJson() const
 
 void SegmentMeta::FromJson(const Json & json)
 {
-    path = json["path"].get<std::string>();
+    root_path = json["root_path"].get<std::string>();
+    name = json["name"].get<std::string>();
     dimension = json["dimension"].get<int>();
     sealed = json["sealed"].get<bool>();
     metric = Types::StringToMetricType(json["metric"].get<std::string>());

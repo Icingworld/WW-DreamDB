@@ -33,6 +33,11 @@ std::vector<Types::SearchResult> Segment::Search(const std::vector<float> & vect
     return index_->Search(vector, top_k);
 }
 
+std::string Segment::Name() const
+{
+    return meta_.name;
+}
+
 std::size_t Segment::Size() const
 {
     return data_.size();
@@ -57,17 +62,17 @@ void Segment::Seal()
     // │           └── data.bin
 
     // 写 meta.json 到 path/meta.json
-    Meta::SaveMeta(meta_, meta_.path + "/meta.json");
+    Meta::SaveMeta(meta_, meta_.root_path + "/" + meta_.name + "/meta.json");
 
     // 写 index.bin 到 path/index.bin
     index_->Build();
-    index_->Save(meta_.path + "/index.bin");
+    index_->Save(meta_.root_path + "/" + meta_.name + "/index.bin");
 
     // 写 data.bin 到 path/data.bin
     // 格式：[id_len][id_bytes][vector_floats]
-    std::ofstream ofs(meta_.path + "/data.bin", std::ios::binary);
+    std::ofstream ofs(meta_.root_path + "/" + meta_.name + "/data.bin", std::ios::binary);
     if (!ofs.is_open()) {
-        throw std::runtime_error("Failed to open data file: " + meta_.path + "/data.bin");
+        throw std::runtime_error("Failed to open data file: " + meta_.root_path + "/" + meta_.name + "/data.bin");
     }
 
     for (const auto & entry : data_) {
@@ -86,21 +91,21 @@ void Segment::Seal()
 void Segment::LoadMeta()
 {
     // 读取 meta.json
-    Meta::LoadMeta(meta_, meta_.path + "/meta.json");
+    Meta::LoadMeta(meta_, meta_.root_path + "/" + meta_.name + "/meta.json");
 }
 
 void Segment::LoadIndex()
 {
     // 读取 index.bin
-    index_->Load(meta_.path + "/index.bin");
+    index_->Load(meta_.root_path + "/" + meta_.name + "/index.bin");
 }
 
 void Segment::LoadData()
 {
     // 从 data.bin 中读取数据
-    std::ifstream ifs(meta_.path + "/data.bin", std::ios::binary);
+    std::ifstream ifs(meta_.root_path + "/" + meta_.name + "/data.bin", std::ios::binary);
     if (!ifs.is_open()) {
-        throw std::runtime_error("Failed to open data file: " + meta_.path + "/data.bin");
+        throw std::runtime_error("Failed to open data file: " + meta_.root_path + "/" + meta_.name + "/data.bin");
     }
 
     while (true) {

@@ -3,6 +3,8 @@
 #include <string>
 
 #include "common/json.h"
+#include "common/types/metric_type.h"
+#include "common/types/index_type.h"
 
 namespace WW::Meta
 {
@@ -28,10 +30,13 @@ public:
     void FromJson(const Json & json);
 
 public:
-    std::string name;           // 集合名称
-    std::string root_path;      // 集合根路径
-    int dimension;              // 集合维度
-    std::size_t segment_size;   // 最大段落大小
+    std::string name;                       // collection 名称
+    std::string root_path;                  // collection 根路径
+    int dimension;                          // collection 维度
+    Types::MetricType metric;               // 距离指标类型
+    Types::IndexType index;                 // 索引类型
+    std::size_t segment_size;               // 最大 segment 大小
+    std::vector<std::string> segment_name;  // segment 名称
 };
 
 } // namespace WW::Meta
