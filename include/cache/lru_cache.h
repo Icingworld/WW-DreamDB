@@ -40,6 +40,13 @@ public:
     std::optional<std::shared_ptr<Value>> Get(const Key & key) override;
 
     /**
+     * @brief 是否包含键
+     * @param key 键
+     * @return `true` 包含，`false` 不包含
+     */
+    bool Contains(const Key & key) const override;
+
+    /**
      * @brief 清空所有缓存
      */
     void Clear() override;

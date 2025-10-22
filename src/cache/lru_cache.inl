@@ -58,6 +58,14 @@ template<
     return it->second->second;
 }
 
+template <
+    typename Key,
+    typename Value
+> bool LRUCache<Key, Value>::Contains(const Key & key) const
+{
+    return map_.find(key) != map_.end();
+}
+
 template<
     typename Key,
     typename Value

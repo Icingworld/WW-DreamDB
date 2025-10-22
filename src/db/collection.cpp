@@ -20,6 +20,7 @@ Collection::Collection(const Meta::CollectionMeta & meta)
     , segment_cache_()
 {
     // 加载 collection 元数据
+    Load();
 }
 
 bool Collection::Insert(const std::string & id, const std::vector<float> & vector)
@@ -38,24 +39,42 @@ bool Collection::Insert(const std::string & id, const std::vector<float> & vecto
 
 std::vector<Types::SearchResult> Collection::Search(const std::vector<float> & vector, int top_k) const
 {
-    // // 准备空间
-    // std::vector<Types::SearchResult> all_results;
-    // all_results.reserve(top_k * segments_.size());
+    std::vector<Types::SearchResult> all_results;
+    all_results.reserve(top_k * meta_.segment_name.size());
 
-    // // 从每个 segment 获取结果
-    // for (const auto & seg : segments_) {
-    //     auto results = seg->Search(vector, top_k);
-    //     all_results.insert(all_results.end(), results.begin(), results.end());
-    // }
+    for (const auto & seg_name : meta_.segment_name) {
+        std::shared_ptr<Segment> seg;
 
-    // // 聚合排序
-    // std::partial_sort(all_results.begin(), all_results.begin() + top_k, all_results.end(), 
-    //     [](const Types::SearchResult & a, const Types::SearchResult & b) {
-    //         return a.score < b.score;
-    //     }
-    // );
+        // 从缓存获取或加载 segment
+        if (segment_cache_->Contains(seg_name)) {
+            seg = segment_cache_->Get(seg_name).value();
+        } else {
+            // 加载 segment 元数据
+            Meta::SegmentMeta seg_meta;
+            Meta::LoadMeta(seg_meta, meta_.root_path + "/" + meta_.name + "/segments/" + seg_name + "/meta.json");
 
-    // return std::vector<Types::SearchResult>(all_results.begin(), all_results.begin() + top_k);
+            seg = std::make_shared<Segment>(seg_meta);
+            segment_cache_->Put(seg_name, seg);
+        }
+
+        // 执行搜索
+        auto results = seg->Search(vector, top_k);
+        all_results.insert(all_results.end(), results.begin(), results.end());
+    }
+
+    // 聚合排序，保留前 top_k
+    if (all_results.size() > top_k) {
+        std::partial_sort(
+            all_results.begin(),
+            all_results.begin() + top_k,
+            all_results.end(),
+            [](const Types::SearchResult &a, const Types::SearchResult &b) {
+                return a.score < b.score; // 越小越相似（L2）
+            });
+        all_results.resize(top_k);
+    }
+
+    return all_results;
 }
 
 void Collection::SealActiveSegment()
@@ -74,9 +93,10 @@ void Collection::Load()
     // 加载 collection 元数据
     Meta::LoadMeta(meta_, meta_.root_path + "/" + meta_.name + "/meta.json");
 
-    // 加载所有 segment 元数据
-    Meta::SegmentMeta segment_meta;
-    
+    // 创建并激活 active segment
+    Meta::SegmentMeta meta;
+    Meta::LoadMeta(meta, meta_.root_path + "/" + meta_.name + "/segments/" + meta_.active_segment_name + "/meta.json");
+    active_segment_ = std::make_shared<Segment>(meta);
 }
 
 void Collection::SaveMeta()

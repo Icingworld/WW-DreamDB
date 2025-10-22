@@ -37,6 +37,7 @@ public:
     Types::IndexType index;                 // 索引类型
     std::size_t segment_size;               // 最大 segment 大小
     std::vector<std::string> segment_name;  // segment 名称
+    std::string active_segment_name;        // 活跃 segment 名称
 };
 
 } // namespace WW::Meta

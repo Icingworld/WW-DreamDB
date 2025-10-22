@@ -63,9 +63,9 @@ public:
     void New();
 
 private:
-    Meta::CollectionMeta meta_;                                                         // collection 元数据
-    std::shared_ptr<Segment> active_segment_;                                           // 当前活跃的 segment
-    std::shared_ptr<LRUCache<std::string, std::shared_ptr<Segment>>> segment_cache_;    // segment 缓存
+    Meta::CollectionMeta meta_;                                             // collection 元数据
+    std::shared_ptr<Segment> active_segment_;                               // 当前活跃的 segment
+    std::shared_ptr<LRUCache<std::string, Segment>> segment_cache_;         // segment 缓存
 
     /**
      * @brief 创建新的 segment

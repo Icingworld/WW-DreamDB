@@ -34,10 +34,11 @@ public:
     virtual std::optional<std::shared_ptr<Value>> get(const Key & key) = 0;
 
     /**
-     * @brief 删除缓存项
+     * @brief 是否包含键
      * @param key 键
+     * @return `true` 包含，`false` 不包含
      */
-    virtual void Erase(const Key & key) = 0;
+    virtual bool Contains(const Key & key) const = 0;
 
     /**
      * @brief 清空所有缓存
